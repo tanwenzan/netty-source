@@ -86,6 +86,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance using the given {@link SelectorProvider} and protocol family (supported only since JDK 15).
      */
     public NioServerSocketChannel(SelectorProvider provider, InternetProtocolFamily family) {
+        // 在这里创建了java底层ServerSocketChannel.
         this(newChannel(provider, family));
     }
 

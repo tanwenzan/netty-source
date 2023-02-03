@@ -475,11 +475,12 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
 
             AbstractChannel.this.eventLoop = eventLoop;
-
+            // 如果调用register方法的线程是eventLoop对应的线程，则直接调用。
             if (eventLoop.inEventLoop()) {
                 register0(promise);
             } else {
                 try {
+                    // 否则使用eventLoop对应线程进行调用注册方法。
                     eventLoop.execute(new Runnable() {
                         @Override
                         public void run() {

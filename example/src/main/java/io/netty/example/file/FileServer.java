@@ -41,36 +41,41 @@ public final class FileServer {
 
     static final boolean SSL = System.getProperty("ssl") != null;
     // Use the same default port with the telnet example so that we can use the telnet client example to access it.
-    static final int PORT = Integer.parseInt(System.getProperty("port", SSL? "8992" : "8023"));
+    static final int PORT = Integer.parseInt(System.getProperty("port", SSL ? "8992" : "8023"));
 
     public static void main(String[] args) throws Exception {
         // Configure SSL.
         final SslContext sslCtx = ServerUtil.buildSslContext();
 
         // Configure the server.
+        // 创建了对应的线程数量的EventLoop实例数组以及EventLoop。
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
+            //
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
-             .channel(NioServerSocketChannel.class)
-             .option(ChannelOption.SO_BACKLOG, 100)
-             .handler(new LoggingHandler(LogLevel.INFO))
-             .childHandler(new ChannelInitializer<SocketChannel>() {
-                 @Override
-                 public void initChannel(SocketChannel ch) throws Exception {
-                     ChannelPipeline p = ch.pipeline();
-                     if (sslCtx != null) {
-                         p.addLast(sslCtx.newHandler(ch.alloc()));
-                     }
-                     p.addLast(
-                             new StringEncoder(CharsetUtil.UTF_8),
-                             new LineBasedFrameDecoder(8192),
-                             new StringDecoder(CharsetUtil.UTF_8),
-                             new ChunkedWriteHandler(),
-                             new FileServerHandler());
-                 }
-             });
+                    // 这里初始化了channelFactory，简化了代码
+                    .channel(NioServerSocketChannel.class)
+                    // SO_BACKLOG:backlog 用于构造服务端套接字ServerSocket对象，标识当服务器请求处理线程全满时，
+                    // 用于临时存放已完成三次握手的请求的队列的最大长度。
+                    .option(ChannelOption.SO_BACKLOG, 100)
+                    .handler(new LoggingHandler(LogLevel.INFO))
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ChannelPipeline p = ch.pipeline();
+                            if (sslCtx != null) {
+                                p.addLast(sslCtx.newHandler(ch.alloc()));
+                            }
+                            p.addLast(
+                                    new StringEncoder(CharsetUtil.UTF_8),
+                                    new LineBasedFrameDecoder(8192),
+                                    new StringDecoder(CharsetUtil.UTF_8),
+                                    new ChunkedWriteHandler(),
+                                    new FileServerHandler());
+                        }
+                    });
 
             // Start the server.
             ChannelFuture f = b.bind(PORT).sync();

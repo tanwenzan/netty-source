@@ -32,6 +32,10 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
+        // 如果线程数量是2的n次方则选用位操作进行选取executor(EventLoop)进行执行task.
+        // 否则使用的方式进行选取。
+        // 注意，这俩个选择器最终的效果是一致的(都是进行取余)，只是说如果是2的n次方，可以利用&操作符进行替代取余操作。
+        // 位运算速度快于取余等非位运算操作。
         if (isPowerOfTwo(executors.length)) {
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {

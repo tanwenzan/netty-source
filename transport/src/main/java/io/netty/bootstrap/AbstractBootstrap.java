@@ -106,6 +106,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * {@link Channel} implementation has no no-args constructor.
      */
     public B channel(Class<? extends C> channelClass) {
+        // 这里使用了默认 ChannelFactory ReflectiveChannelFactory。
         return channelFactory(new ReflectiveChannelFactory<C>(
                 ObjectUtil.checkNotNull(channelClass, "channelClass")
         ));
@@ -264,12 +265,16 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * Create a new {@link Channel} and bind it.
      */
     public ChannelFuture bind(SocketAddress localAddress) {
+        // 进行校验，对一些属性非空判断，group与channelFactory。
         validate();
+        // 开始真正做事。
         return doBind(ObjectUtil.checkNotNull(localAddress, "localAddress"));
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        // 这里进行的初始化。
         final ChannelFuture regFuture = initAndRegister();
+
         final Channel channel = regFuture.channel();
         if (regFuture.cause() != null) {
             return regFuture;
@@ -307,7 +312,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
+            // 通过这里进行创建channel，同时也是java底层的Channel.
             channel = channelFactory.newChannel();
+            // 然后初始化channel，这个方法是抽象方法，由子类实现。
             init(channel);
         } catch (Throwable t) {
             if (channel != null) {
@@ -320,7 +327,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
 
+        // 注册channel，这里是将通道注册到bossGroup,而不是workGroup.
         ChannelFuture regFuture = config().group().register(channel);
+        // 如果关键出现了异常那么就进行停止，断开通道。
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {
                 channel.close();
@@ -337,7 +346,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         //    i.e. It's safe to attempt bind() or connect() now:
         //         because bind() or connect() will be executed *after* the scheduled registration task is executed
         //         because register(), bind(), and connect() are all bound to the same thread.
-
+        // 到这里就已经成功了，可以进行bind()和content()。因为已经注册过了，无论是在eventLoop线程中还是在其他线程中。
         return regFuture;
     }
 
