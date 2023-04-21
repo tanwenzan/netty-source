@@ -91,9 +91,12 @@ final class ChannelHandlerMask {
     private static int mask0(Class<? extends ChannelHandler> handlerType) {
         int mask = MASK_EXCEPTION_CAUGHT;
         try {
+            // 如果是入站处理器。则先绑定上所有的入站事件。然后依次判断是否需要进行跳过。
+            // 其实就是通过一个16位的二进制来表示这个处理器是否需要去执行某些方法。前八位表示入站处理器，后八位表示出站处理器。
+            // 0 代表跳过，1代表执行。
             if (ChannelInboundHandler.class.isAssignableFrom(handlerType)) {
                 mask |= MASK_ALL_INBOUND;
-
+                // 下面判断handlerType如果在对应的方法上加了@Skip注解，即表示跳过，那么就将对应的位数进行置为0.
                 if (isSkippable(handlerType, "channelRegistered", ChannelHandlerContext.class)) {
                     mask &= ~MASK_CHANNEL_REGISTERED;
                 }

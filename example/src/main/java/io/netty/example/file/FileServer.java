@@ -57,9 +57,9 @@ public final class FileServer {
             b.group(bossGroup, workerGroup)
                     // 这里初始化了channelFactory，简化了代码
                     .channel(NioServerSocketChannel.class)
-                    // SO_BACKLOG:backlog 用于构造服务端套接字ServerSocket对象，标识当服务器请求处理线程全满时，
+                    // SO_BACKLOG:backlog 用于构造服务端套接字 ServerSocket 对象。标识当服务器请求处理线程全满时，
                     // 用于临时存放已完成三次握手的请求的队列的最大长度。
-                    .option(ChannelOption.SO_BACKLOG, 100)
+                    .option(ChannelOption.SO_BACKLOG, 128)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override

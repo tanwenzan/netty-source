@@ -76,4 +76,9 @@ public class StringEncoder extends MessageToMessageEncoder<CharSequence> {
 
         out.add(ByteBufUtil.encodeString(ctx.alloc(), CharBuffer.wrap(msg), charset));
     }
+
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        super.handlerAdded(ctx);
+    }
 }
